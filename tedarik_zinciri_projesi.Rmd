@@ -1,0 +1,222 @@
+---
+title: "Tedarikçi Etki Analizi Raporu"
+author: "Dilan ULUS"
+date: "2025-12-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r kutuphaneler}
+library(readxl)
+library(janitor)
+library(dplyr)
+library(reticulate) #Python
+library(DBI)        #Sql 
+library(RSQLite)    #Sql motoru
+library(ggplot2)
+
+retail <- read_excel("data/retail.xlsx")
+
+retail <- retail %>%
+  clean_names()
+#gereksiz ve boş sütunların silinme işlemi
+if("x10" %in% names(retail)) {
+  retail <- retail %>% select(-x10)
+  } else if ("empty_column" %in% names(retail)) {
+    retail <- retail %>% select(-empty_column)
+    }
+#Veri tiplerini düzeltme(yazı-> sayı dönüşümü)
+retail <- retail %>%
+  mutate(
+    # Satış ve transferleri sayıya (numeric) çevir
+    retail_sales = as.numeric(retail_sales),
+    retail_transfers = as.numeric(retail_transfers),
+    warehouse_sales = as.numeric(warehouse_sales),
+    
+    # Yıl ve Ay da sayı olsun
+    year = as.numeric(year),
+    month = as.numeric(month)
+  )
+
+#dönüşüm sonrası kontrol etme
+glimpse(retail)
+```
+
+```{r sql_baglantisi_kur}
+#veriyi SQL ortamına gönderme 
+con <- dbConnect(RSQLite::SQLite(), ":memory:")
+dbWriteTable(con, "retail_db", retail, overwrite=TRUE)
+
+```
+
+```{sql connection=con, output.var="sql_ozet"}
+-- Veriyi analiz için özetliyoruz
+SELECT 
+    supplier, 
+    item_type, 
+    COUNT(*) as urun_sayisi,             -- Kaç çeşit ürün satmış?
+    SUM(retail_sales) as toplam_satis,   -- Toplam ne kadar satmış?
+    AVG(retail_transfers) as ortalama_transfer, -- Ürünleri ne kadar transfer edilmiş?
+    SUM(warehouse_sales) as depo_satis   -- Depodan ne kadar satmış?
+FROM retail_db
+WHERE retail_sales > 0 
+GROUP BY supplier, item_type
+ORDER BY toplam_satis DESC
+
+```
+
+```{r}
+head(sql_ozet)
+```
+
+
+KPI 1: toplam satış ( total retail sales)
+soru: bu dönemde ne kadar satılmış?
+
+KPI 2: Toplam depo çıkışı ( total warehouse sales)
+soru: depodan ne kadar ürün çıkmış? tedarik/stok/lojistik
+
+KPI 3: satış/depo oranı
+formül: satılan/depodan çıkan
+1'e yakın -> saglıklı
+çok düşük -> stok sorunu
+çok yüksek -> tedarik riski
+
+KPI 4: satış mı yapıyoruz, yoksa sadece mağazalar aarası mı taşıyoruz?
+Transfer yüksek ise:
+operasyon var ama gelir yok 
+
+KPI 5: ürün başına ortalama satış
+soru: her ürün ne kadar satıyor?
+Yıldızlı ürün/ölü ürün
+
+KPI 6: tedarikçi perfonmansı 
+soru: hangi supplier işimizi taşıyor?
+az ama çok satan / çok ama verimsiz 
+supplier'lar ayrılır.
+
+1. Yönetici Özeti (Executive Summary)
+Yapılan analizler sonucunda, şirketin ciro lokomotifi olan tedarikçilerin aynı zamanda en yüksek operasyonel yükü (transfer maliyeti) oluşturduğu tespit edilmiştir. Hedefimiz; "Yüksek Satış, Düşük Transfer" prensibiyle çalışan verimli tedarikçileri (Örn: Republic National) model alarak, yüksek maliyetli tedarikçilerin lojistik süreçlerini optimize etmektir.
+
+2. Temel Bulgular ve Veri Yorumu
+Elde edilen SQL çıktıları ışığında tedarikçi ekosistemimiz iki ana grupta incelenmiştir:
+
+A) Hacim Lideri Ancak Operasyonel Yükü Yüksek (Yüksek Risk)
+
+Örnek: E & J GALLO WINERY
+
+Analiz: Yaklaşık 190 Milyon birim satış ile cironun lideridir. Ancak 1012 puanlık Ortalama Transfer Skoru ile operasyonel olarak en maliyetli iş ortağımızdır.
+
+İş Yorumu: Bu tedarikçinin ürünleri mağazalara doğru dağıtılamıyor. Ürünler yanlış mağazaya gidiyor, sonra satılabilmek için mağaza mağaza geziyor (Transfer). Bu durum lojistik maliyetlerimizi ve personel eforumuzu ciddi oranda artırıyor.
+
+B) Verimlilik Şampiyonu (Benchmark / Kıyas Noktası)
+
+Örnek: REPUBLIC NATIONAL DISTRIBUTING CO
+
+Analiz: 113 Milyon birim ile çok yüksek bir satış hacmine sahip olmasına rağmen, Ortalama Transfer Skoru sadece 253'tür.
+
+İş Yorumu: Bu tedarikçi "Doğru Ürün, Doğru Mağaza" ilkesine en uygun çalışan iş ortağıdır. Ürünleri mağazaya girdiği gibi satılmakta, mağazalar arası transfer gerektirmemektedir. Şirket için en kârlı model budur.
+
+3. Tespit Edilen KPI Anlamları
+Yöneticilerin tabloyu doğru okuması için kritik göstergeler:
+
+Toplam Satış (Retail Sales): Tedarikçinin kasamıza soktuğu para gücü. (Ne kadar yüksekse o kadar iyi).
+
+Ortalama Transfer (Avg Retail Transfers): Bir ürünün satılmadan önce kaç kez yer değiştirmek zorunda kaldığı. (Ne kadar DÜŞÜKSE o kadar iyi). Bu değerin yüksek olması; yanlış talep tahmini ve hatalı stok dağılımı yapıldığını gösterir.
+
+4. Stratejik Öneri ve Yol Haritası (Hibrit Model)
+Mevcut durumda E & J GALLO firmasından vazgeçemeyiz (Ciro lideri). Ancak operasyonel verimsizliğini kabul de edemeyiz.
+
+Aksiyon: Republic National firmasının lojistik ve dağıtım stratejisi incelenmeli ve bu model E & J Gallo operasyonlarına uygulanmalıdır.
+
+Hedef: Eğer E & J Gallo'nun transfer oranlarını (1012'den), Republic seviyelerine (250 bandına) çekebilirsek; satış hacmi sabit kalsa bile lojistik tasarruftan dolayı net kârlılığımız artacaktır.
+
+```{python bubble_chart}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 1. Veriyi Al
+df = r.sql_ozet
+
+# 2. Grafik Alani Ayarlari
+sns.set_theme(style="whitegrid")
+# Figur boyutunu genisletiyoruz (Bosluklar icin)
+plt.figure(figsize=(13, 9)) 
+
+# 3. Balon Grafigi
+grafik = sns.scatterplot(
+    data=df.head(15), 
+    x="ortalama_transfer", 
+    y="toplam_satis", 
+    size="depo_satis", 
+    hue="item_type",      
+    sizes=(200, 2000),    
+    alpha=0.7,            
+    palette="viridis"     
+)
+
+# 4. Baslik ve Eksen Yazilari
+# Basligi biraz yukari ittik
+plt.title("Analiz Sonucu: Satis Gucu vs. Lojistik Yuku", fontsize=16, pad=20) 
+# Alt yaziyi biraz asagi ittik
+plt.xlabel("Ortalama Transfer Sayisi (Operasyonel Yuk)", fontsize=12, labelpad=15) 
+plt.ylabel("Toplam Satis Tutari (Ciro)", fontsize=12)
+
+# --- DUZELTME BURADA ---
+# Legend (Aciklama Kutusu) Ayari:
+# Kutuyu grafigin sagina aliyoruz
+plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0, title="Urun Tipi")
+
+# Not Ekleme (Konumu guvenli yere aldik)
+plt.text(x=df['ortalama_transfer'].min(), 
+         y=df['toplam_satis'].max(), 
+         s="  YILDIZ BOLGE\n(Cok Satis, Az Transfer)", 
+         color='green', weight='bold', fontsize=11)
+
+# EN ONEMLI KISIM: Kenar Bosluklari
+# Alttan (bottom) ve sagdan (right) pay birakiyoruz ki yazilar kesilmesin.
+plt.subplots_adjust(bottom=0.15, right=0.80, top=0.90)
+
+plt.show()
+```
+
+## 4. İstatistiksel Modelleme ve Hipotez Testi
+
+Bu bölümde, tedarik zincirindeki verimsizliğin (yüksek transfer) ciro üzerindeki negatif etkisi ekonometrik olarak test edilmiştir.
+
+```{r model_analizi}
+# 1. Modeli Kuruyoruz (Basit Doğrusal Regresyon)
+# Bağımlı Değişken (Y): Toplam Satış (Ciro)
+# Bağımsız Değişken (X): Ortalama Transfer (Lojistik Yük)
+model <- lm(toplam_satis ~ ortalama_transfer, data = sql_ozet)
+
+# 2. Model Sonuçlarını Ekrana Basıyoruz
+summary(model)
+
+# 3. Modelin Güvenilirliği (Tanı Grafikleri)
+# Hata terimlerinin dağılımı, değişen varyans vb. kontrolü
+par(mfrow=c(2,2)) # 4 grafiği bir arada göster
+plot(model)
+```
+
+### 5. Model Sonuçlarının Yorumu ve Stratejik Çıkarım
+
+Kurulan doğrusal regresyon modeli sonucunda, **Transfer Sayısı** ile **Satışlar** arasında istatistiksel olarak anlamlı ($p < 0.001$) ve **pozitif** yönlü bir ilişki tespit edilmiştir.
+
+* **Katsayı Yorumu:** Transfer sayısındaki her 1 birimlik artış, ortalama satışı yaklaşık **4,709 birim** artırmaktadır.
+* **R-Kare ($R^2$):** Modelin açıklayıcılığı düşüktür (%2.7), bu da satışları etkileyen başka faktörlerin (fiyat, sezonluk etki vb.) olduğunu gösterir.
+
+**YÖNETİCİ ÖZETİ:**
+Beklentinin aksine, transferlerin satışları düşürmediği; tam tersine **yüksek hacimli ürünlerin çok fazla transfer edildiği** görülmüştür. Bu durum, şirketin **"Çok Satan Ürünler"** için yaptığı stok planlamasının yetersiz olduğunu kanıtlar. Çok talep gören ürünler, doğru mağazaya ilk seferde gönderilemediği için mağazalar arası transfer trafiği yaratmaktadır.
+
+**Öneri:** Lojistik maliyetini düşürmek için, yüksek satış hacmine sahip ancak transfer skoru yüksek tedarikçilerin (Örn: E & J Gallo) ilk dağıtım planlaması (allocation) acilen iyileştirilmelidir.
+
+
+
+
+
+
