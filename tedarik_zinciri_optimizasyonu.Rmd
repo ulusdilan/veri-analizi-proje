@@ -1,24 +1,42 @@
 ---
-title: "Tedarikçi Etki Analizi Raporu"
-author: "Dilan ULUS"
-date: "2025-12-24"
+title: "Tedarik Zİnciri Optimizasyonu"
 output: html_document
 ---
+
+*1.Proje Tanımı ve Amaç*
+Bu raporun amacı, parakende satış verileri ışığında tedarikçi performanslarını
+"satış hacmi" ve "operasyonel lojistik yükü" (transferler) ekseninde değerlendirmektedir.
+Analiz sürecinde aşağıdaki sorulara yanıt aranmıştır:
+ -Hangi Tedarikçiler ciroda liderdir, hangileri operasyonel yük(transfer) yaratmaktadır.?
+ -Mağazalar arası ürün transferleri satışı arttırmakta mıdır, yoksa sadece maliyet mi oluşturmaktadır?
+ -Verimsiz stok yönetimi yapan tedarikçiler için nasıl bir aksiyon planı oluşturulmalıdır?
+
+*Kullanılan Teknolojiler*:
+ -R & Python: İstatistiksel modelleme ve görselleştirme (Interoperability).
+ -SQL (SQLite): Büyük veri manipülasyonu ve agregasyon.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r kutuphaneler}
+*2. Veri Seti Hazırlığı ve Ön İşleme (Data Cleaning)*
+
+Ham veri setinde (Raw Data) yer alan yapısal bozukluklar, analiz öncesinde temizlenmiştir. Özellikle sayısal olması gereken sütunlarda (Satış, Transfer) tespit edilen metin karakterleri ("BC", "WC" vb.) temizlenmiş ve veri tipleri analize uygun hale getirilmiştir.
+
+```{r, warning=FALSE, message=FALSE}
+
 library(readxl)
 library(janitor)
 library(dplyr)
-library(reticulate) #Python
+library(reticulate)
+# Miniconda artik kurulu oldugu icin sadece paketleri istiyoruz
+#py_install(c("pandas", "matplotlib", "seaborn"), pip = TRUE)
+use_miniconda("r-reticulate", required = TRUE)
 library(DBI)        #Sql 
 library(RSQLite)    #Sql motoru
 library(ggplot2)
 
-retail <- read_excel("data/retail.xlsx")
+retail <- read_excel("retail.xlsx")
 
 retail <- retail %>%
   clean_names()
@@ -31,7 +49,7 @@ if("x10" %in% names(retail)) {
 #Veri tiplerini düzeltme(yazı-> sayı dönüşümü)
 retail <- retail %>%
   mutate(
-    # Satış ve transferleri sayıya (numeric) çevir
+    # Satış ve transferleri sayıya (numeric) çevirme işlemi
     retail_sales = as.numeric(retail_sales),
     retail_transfers = as.numeric(retail_transfers),
     warehouse_sales = as.numeric(warehouse_sales),
@@ -44,6 +62,15 @@ retail <- retail %>%
 #dönüşüm sonrası kontrol etme
 glimpse(retail)
 ```
+
+*3. Tedarikçi Bazlı Performans Analizi (SQL Aggregation)*
+
+Veri seti satır bazlı (işlem bazlı) olduğu için, stratejik karar alabilmek adına veriyi Tedarikçi (Supplier) bazında özetlenmiştir. 
+
+Aşağıdaki SQL sorgusu ile her bir tedarikçi için şu kritik KPI'lar hesaplanmıştır:
+* *Toplam Satış (Retail Sales):* Tedarikçinin yarattığı ciro.
+* *Ortalama Transfer (Avg Transfers):* Ürünlerin mağazalar arası dolaşım sıklığı (Lojistik Yük).
+* *Ürün Çeşitliliği:* Tedarikçinin kaç farklı ürünü (SKU) olduğu.
 
 ```{r sql_baglantisi_kur}
 #veriyi SQL ortamına gönderme 
@@ -71,73 +98,23 @@ ORDER BY toplam_satis DESC
 ```{r}
 head(sql_ozet)
 ```
+*4. Görselleştirme: Satış Gücü vs. Lojistik Yükü (Python & Seaborn)*
 
+Tedarikçilerin performansını tek bir karede görebilmek için veriyi Python (Seaborn) kütüphanesi kullanarak görselleştirdik. Bu "Bubble Chart" (Balon Grafiği) bize 3 boyutlu bir analiz sunar:
 
-KPI 1: toplam satış ( total retail sales)
-soru: bu dönemde ne kadar satılmış?
-
-KPI 2: Toplam depo çıkışı ( total warehouse sales)
-soru: depodan ne kadar ürün çıkmış? tedarik/stok/lojistik
-
-KPI 3: satış/depo oranı
-formül: satılan/depodan çıkan
-1'e yakın -> saglıklı
-çok düşük -> stok sorunu
-çok yüksek -> tedarik riski
-
-KPI 4: satış mı yapıyoruz, yoksa sadece mağazalar aarası mı taşıyoruz?
-Transfer yüksek ise:
-operasyon var ama gelir yok 
-
-KPI 5: ürün başına ortalama satış
-soru: her ürün ne kadar satıyor?
-Yıldızlı ürün/ölü ürün
-
-KPI 6: tedarikçi perfonmansı 
-soru: hangi supplier işimizi taşıyor?
-az ama çok satan / çok ama verimsiz 
-supplier'lar ayrılır.
-
-1. Yönetici Özeti (Executive Summary)
-Yapılan analizler sonucunda, şirketin ciro lokomotifi olan tedarikçilerin aynı zamanda en yüksek operasyonel yükü (transfer maliyeti) oluşturduğu tespit edilmiştir. Hedefimiz; "Yüksek Satış, Düşük Transfer" prensibiyle çalışan verimli tedarikçileri (Örn: Republic National) model alarak, yüksek maliyetli tedarikçilerin lojistik süreçlerini optimize etmektir.
-
-2. Temel Bulgular ve Veri Yorumu
-Elde edilen SQL çıktıları ışığında tedarikçi ekosistemimiz iki ana grupta incelenmiştir:
-
-A) Hacim Lideri Ancak Operasyonel Yükü Yüksek (Yüksek Risk)
-
-Örnek: E & J GALLO WINERY
-
-Analiz: Yaklaşık 190 Milyon birim satış ile cironun lideridir. Ancak 1012 puanlık Ortalama Transfer Skoru ile operasyonel olarak en maliyetli iş ortağımızdır.
-
-İş Yorumu: Bu tedarikçinin ürünleri mağazalara doğru dağıtılamıyor. Ürünler yanlış mağazaya gidiyor, sonra satılabilmek için mağaza mağaza geziyor (Transfer). Bu durum lojistik maliyetlerimizi ve personel eforumuzu ciddi oranda artırıyor.
-
-B) Verimlilik Şampiyonu (Benchmark / Kıyas Noktası)
-
-Örnek: REPUBLIC NATIONAL DISTRIBUTING CO
-
-Analiz: 113 Milyon birim ile çok yüksek bir satış hacmine sahip olmasına rağmen, Ortalama Transfer Skoru sadece 253'tür.
-
-İş Yorumu: Bu tedarikçi "Doğru Ürün, Doğru Mağaza" ilkesine en uygun çalışan iş ortağıdır. Ürünleri mağazaya girdiği gibi satılmakta, mağazalar arası transfer gerektirmemektedir. Şirket için en kârlı model budur.
-
-3. Tespit Edilen KPI Anlamları
-Yöneticilerin tabloyu doğru okuması için kritik göstergeler:
-
-Toplam Satış (Retail Sales): Tedarikçinin kasamıza soktuğu para gücü. (Ne kadar yüksekse o kadar iyi).
-
-Ortalama Transfer (Avg Retail Transfers): Bir ürünün satılmadan önce kaç kez yer değiştirmek zorunda kaldığı. (Ne kadar DÜŞÜKSE o kadar iyi). Bu değerin yüksek olması; yanlış talep tahmini ve hatalı stok dağılımı yapıldığını gösterir.
-
-4. Stratejik Öneri ve Yol Haritası (Hibrit Model)
-Mevcut durumda E & J GALLO firmasından vazgeçemeyiz (Ciro lideri). Ancak operasyonel verimsizliğini kabul de edemeyiz.
-
-Aksiyon: Republic National firmasının lojistik ve dağıtım stratejisi incelenmeli ve bu model E & J Gallo operasyonlarına uygulanmalıdır.
-
-Hedef: Eğer E & J Gallo'nun transfer oranlarını (1012'den), Republic seviyelerine (250 bandına) çekebilirsek; satış hacmi sabit kalsa bile lojistik tasarruftan dolayı net kârlılığımız artacaktır.
+1.  *X Ekseni (Yatay):* Operasyonel Yük (Ortalama Transfer Sayısı). Sağa gidildikçe lojistik maliyet artar.
+2.  *Y Ekseni (Dikey):* Ciro (Toplam Satış). Yukarı gidildikçe kasa dolar.
+3.  *Balon Büyüklüğü:* Depo Satış Hacmi. Stok derinliğini gösterir.
+Hedef Bölge: Sol Üst Köşe (Düşük Transfer, Yüksek Satış).
 
 ```{python bubble_chart}
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+plt.clf()
 
 # 1. Veriyi Al
 df = r.sql_ozet
@@ -184,9 +161,38 @@ plt.subplots_adjust(bottom=0.15, right=0.80, top=0.90)
 plt.show()
 ```
 
-## 4. İstatistiksel Modelleme ve Hipotez Testi
+*5. İstatistiksel Modelleme ve Hipotez Testi*
 
-Bu bölümde, tedarik zincirindeki verimsizliğin (yüksek transfer) ciro üzerindeki negatif etkisi ekonometrik olarak test edilmiştir.
+Görselleştirmede fark edilen "Transfer arttıkça satış da artıyor" eğilimini matematiksel olarak kanıtlamak için **Basit Doğrusal Regresyon (Linear Regression)** modeli kurulmuştur.
+
+* *Bağımlı Değişken (Y):* Toplam Satış (Ciro)
+* *Bağımsız Değişken (X):* Ortalama Transfer (Lojistik Yük)
+
+Bu model, transfer trafiğindeki artışın satışlara olan "net etkisini" ($R^2$ ve P-değeri ile) ölçmemizi sağlar.
+Modelin temel parametreleri ve yorumları aşağıdadır:
+
+#### A) Katsayıların Yorumu (Coefficients)
+
+1.  *Eğim (Slope - `ortalama_transfer`): +4,709*
+    * *İstatistiksel Anlam:* Ortalama transfer sayısındaki her *1 birimlik artış*, toplam satışlarda yaklaşık *4,709 birimlik bir artışa* neden olmaktadır.
+    * *Yorum:* Transferler ile satışlar arasında *Pozitif (+) Korelasyon** vardır. Yani transfer yapmak satışı düşürmemiş, aksine (talebi karşıladığı için) artırmıştır.
+
+2.  *P-Değeri (Significance): $0.000226$ ($p < 0.001$)*
+    * Model sonucunda `p-value` değeri 0.05'ten (hatta 0.001'den) çok küçüktür.
+    * *Yorum:* Bulduğumuz bu ilişki *%99.9 güven aralığında* anlamlıdır. Yani bu sonuç şans eseri oluşmamıştır; transfer trafiği ile ciro arasında matematiksel olarak kesin bir bağ vardır.
+
+3.  *Sabit Değer (Intercept): 4,676,673*
+    * Transfer sayısı "0" olsa bile, bir tedarikçinin ortalama beklenen satış hacmi yaklaşık 4.6 Milyon birimdir. Bu, markaların kendi organik gücünü gösterir.
+
+B) Modelin Açıklayıcılık Gücü ($R^2$)
+
+* *R-Squared Değeri:* 0.027 (%2.7)
+* *Analiz:* Kurulan model, satışlardaki değişimin %2.7'sini transferler ile açıklayabilmektedir.
+* *Kritik Çıkarım:* R-kare değerinin düşük olması, satışları etkileyen tek faktörün transfer olmadığını gösterir (Fiyat, marka bilinirliği, sezonluk etkiler vb. asıl belirleyicidir). Ancak *P-değerinin çok anlamlı çıkması*, etkinin küçük de olsa "göz ardı edilemez" olduğunu kanıtlar.
+
+---
+*📉 İstatistiksel Karar:*
+Yapılan t-testi sonucunda H=0 (Etkisiz Hipotez) reddedilmiştir. Mağazalar arası transferlerin satış performansı üzerinde *pozitif ve anlamlı* bir etkisi olduğu doğrulanmıştır.
 
 ```{r model_analizi}
 # 1. Modeli Kuruyoruz (Basit Doğrusal Regresyon)
@@ -203,21 +209,38 @@ par(mfrow=c(2,2)) # 4 grafiği bir arada göster
 plot(model)
 ```
 
-### 5. Model Sonuçlarının Yorumu ve Stratejik Çıkarım
 
-Kurulan doğrusal regresyon modeli sonucunda, **Transfer Sayısı** ile **Satışlar** arasında istatistiksel olarak anlamlı ($p < 0.001$) ve **pozitif** yönlü bir ilişki tespit edilmiştir.
+*6. Analiz Bulguları, Sonuç ve Stratejik Yol Haritası*
 
-* **Katsayı Yorumu:** Transfer sayısındaki her 1 birimlik artış, ortalama satışı yaklaşık **4,709 birim** artırmaktadır.
-* **R-Kare ($R^2$):** Modelin açıklayıcılığı düşüktür (%2.7), bu da satışları etkileyen başka faktörlerin (fiyat, sezonluk etki vb.) olduğunu gösterir.
+Bu çalışmada elde edilen bulgular, *İstatistiksel Kanıtlar*, *Saha Yansımaları* ve *Aksiyon Planı* olmak üzere üç aşamada özetlenmiştir.
 
-**YÖNETİCİ ÖZETİ:**
-Beklentinin aksine, transferlerin satışları düşürmediği; tam tersine **yüksek hacimli ürünlerin çok fazla transfer edildiği** görülmüştür. Bu durum, şirketin **"Çok Satan Ürünler"** için yaptığı stok planlamasının yetersiz olduğunu kanıtlar. Çok talep gören ürünler, doğru mağazaya ilk seferde gönderilemediği için mağazalar arası transfer trafiği yaratmaktadır.
+A) İstatistiksel Model Sonuçları (Matematiksel Kanıt)
+Kurulan doğrusal regresyon modeli sonucunda, *Transfer Sayısı* ile *Satışlar* arasında istatistiksel olarak anlamlı (p < 0.001) ve *pozitif* yönlü bir ilişki tespit edilmiştir.
 
-**Öneri:** Lojistik maliyetini düşürmek için, yüksek satış hacmine sahip ancak transfer skoru yüksek tedarikçilerin (Örn: E & J Gallo) ilk dağıtım planlaması (allocation) acilen iyileştirilmelidir.
+* *Katsayı Yorumu:* Transfer sayısındaki her 1 birimlik artış, ortalama satışı yaklaşık *4,709 birim* artırmaktadır.
+* *Bulgunun Anlamı:* Beklentinin aksine, transferlerin satışı düşürmediği görülmüştür. Ancak bu durum sağlıklı bir büyüme değil, *"Zorunlu Operasyon"* işaretidir. Çok talep gören ürünler, doğru mağazaya ilk seferde gönderilemediği için mağazalar arası transfer trafiği (mekik diplomasisi) ile açık kapatılmaya çalışılmaktadır.
 
+B) Tedarikçi Ekosistemi Analizi (Vaka Çalışması)
+Veri seti tedarikçi bazında incelendiğinde, bu verimsizliğin kaynağı netleşmektedir. Ekosistemimiz iki ana profilde çalışmaktadır:
 
+*1. Hacim Lideri Ancak Yüksek Riskli: "E & J GALLO WINERY"*
+* *Durum:* Yaklaşık *190 Milyon birim* satış ile cironun tartışmasız lideridir. Ancak *1012 puanlık* Ortalama Transfer Skoru ile operasyonel olarak en maliyetli iş ortağımızdır.
+* *Sorun:* Bu tedarikçinin ürünleri mağazalara doğru dağıtılamamaktadır. Ürünler sürekli yolda gezmektedir.
+* *Sonuç:* Ciro yüksek olsa da, lojistik maliyetler ve personel eforu kârlılığı eritmektedir.
 
+*2. Verimlilik Şampiyonu (Benchmark): "REPUBLIC NATIONAL DISTRIBUTING CO"*
+* *Durum:* *113 Milyon birim* ile çok yüksek bir hacme sahip olmasına rağmen, Ortalama Transfer Skoru sadece **253'tür**.
+* **Başarı:** Bu tedarikçi *"Doğru Ürün, Doğru Mağaza"* ilkesine en uygun çalışan iş ortağıdır. Ürünleri mağazaya girdiği gibi satılmakta, ekstra transfer gerektirmemektedir.
 
+---
 
+🚀 C) Stratejik Yol Haritası (Aksiyon Planı)
 
+Model sonuçları ve tedarikçi kıyaslamaları ışığında aşağıdaki aksiyonlar alınmalıdır:
 
+1.  *Hedef:* E & J Gallo firmasından vazgeçemeyiz (Ciro lideri). Ancak operasyonel verimsizliğini kabul de edemeyiz.
+
+2.  *Aksiyon:* Republic National firmasının lojistik ve dağıtım stratejisi (Allocation Strategy) incelenmeli ve bu verimli model E & J Gallo operasyonlarına uygulanmalıdır.
+
+3.  *Tahmin:* Eğer E & J Gallo'nun transfer oranlarını (1012'den), Republic seviyelerine (250 bandına) çekebilirsek; satış hacmi sabit kalsa bile 
+*lojistik tasarruftan dolayı net kârlılığımız ciddi oranda artacaktır.*
