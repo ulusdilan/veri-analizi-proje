@@ -1,5 +1,5 @@
 ---
-title: "Tedarik Zİnciri Optimizasyonu"
+title: "Tedarik Zİnciri Stok Yönetimi"
 output: html_document
 ---
 
@@ -243,4 +243,5 @@ Model sonuçları ve tedarikçi kıyaslamaları ışığında aşağıdaki aksiy
 2.  *Aksiyon:* Republic National firmasının lojistik ve dağıtım stratejisi (Allocation Strategy) incelenmeli ve bu verimli model E & J Gallo operasyonlarına uygulanmalıdır.
 
 3.  *Tahmin:* Eğer E & J Gallo'nun transfer oranlarını (1012'den), Republic seviyelerine (250 bandına) çekebilirsek; satış hacmi sabit kalsa bile 
+
 *lojistik tasarruftan dolayı net kârlılığımız ciddi oranda artacaktır.*
