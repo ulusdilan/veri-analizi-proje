@@ -1,3 +1,4 @@
+
 # Kaynak Tahsisi Analizi – Craven Yerel Planı
 
 Bu rapor R Markdown kullanılarak oluşturulmuştur. Depodaki odak noktası,
