@@ -1,13 +1,36 @@
 
---Veri Analizi Portfolyosu: Tedarik Zinciri & Kaynak Yönetimi
+--Veri Analizi Portfolyosu
+
+3.PROJE: Türkiye Enerji Verimliliği Analizi ve 2031 Projeksiyonu
+Bu çalışma, Türkiye'nin 1990-2022 dönemi verilerini kullanarak enerji verimliliği (Energy Intensity) ile yenilenebilir enerji arzı arasındaki ilişkiyi analiz eden hibrit bir veri bilimi projesidir. Proje, hem geleneksel ekonometrik modelleri hem de modern makine öğrenmesi algoritmalarını içermektedir.
+
+Proje Öne Çıkanlar
+Hibrit Metodoloji: Değişkenler arası neden-sonuç ilişkileri için ARDL Sınır Testi, gelecek öngörüleri için Facebook Prophet (Machine Learning) kullanılmıştır.
+Çok Dilli Entegrasyon: Veri çekme ve temizleme için SQL, ekonometrik modelleme için R, zaman serisi tahmini için Python dilleri reticulate kütüphanesi ile aynı ortamda koşturulmuştur.
+Teknik Problem Çözme: Python-C++ derleyici (Rtools) ve sistem yolu (PATH) optimizasyonları yapılarak sistem mimarisi sorunları aşılmıştır.
+
+Bulgular ve Öngörüler
+Ekonometrik Sonuçlar: Bulgular, Türkiye'nin yenilenebilir enerji yatırımlarının enerji yoğunluğunu düşürdüğünü ve enerji verimliliğini istatistiksel olarak anlamlı düzeyde desteklediğini göstermektedir.
+2031 Projeksiyonu: Prophet modeliyle yapılan makine öğrenmesi tahmini, mevcut trendin sürmesi durumunda enerji yoğunluğunun 2031 yılında 0.00077 birimine kadar gerileyeceğini işaret etmektedir.
+
+Kullanılan Teknolojiler
+Diller: SQL, R, Python
+Kütüphaneler: - R: tidyverse, tseries, dynlm, reticulate
+Python: pandas, prophet, matplotlib
+Araçlar: RStudio, Git/GitHub, Rtools 4.4 (C++ Build Tools)
+
+Dosya Yapısı
+energy.Rmd: Analizin tüm kodlarını ve akademik yorumlarını içeren ana dosya.
+energy.html: Projenin web tarayıcıda görüntülenebilen profesyonel rapor çıktısı.
+energy.tex: Akademik raporun LaTeX formatındaki kaynak dosyası.
 
 Bu depo (repository), veri analitiği yeteneklerimi sergilediğim projeleri içerir. Odak noktası; farklı programlama dillerini (**R, Python, SQL**) entegre ederek gerçek hayat problemlerine optimize çözümler üretmektir.
 
 ---
 
-1️. PROJE: Tedarik Zincirinde Stok Yönetimine Yönelik Analitik İnceleme
+2. PROJE: Tedarik Zincirinde Stok Yönetimine Yönelik Analitik İnceleme
+Bu depo (repository), veri analitiği yeteneklerimi sergilediğim projeleri içerir. Odak noktası; farklı programlama dillerini (**R, Python, SQL**) entegre ederek gerçek hayat problemlerine optimize çözümler üretmektir.
 **Kullanılan Teknolojiler:** `R Markdown` • `Python (Seaborn)` • `SQL (SQLite)`
-
 --Projenin Amacı:
 Bu proje, sadece bir veri analizi değil, **üç farklı teknolojinin tek bir raporda (Interoperability) konuşturulduğu** bir optimizasyon çalışmasıdır.
 
@@ -27,7 +50,7 @@ Python (Seaborn) kütüphanesinin görselleştirme yetenekleri kullanılarak olu
 
 *(Detaylı kodlar ve analiz adımları için yukarıdaki `tedarik_zinciri_optimizasyonu.Rmd` dosyasına bakabilirsiniz.)*
 
-2️. PROJE: Kaynak Tahsisi Analizi (Craven Local Plan)
+1. PROJE: Kaynak Tahsisi Analizi (Craven Local Plan)
 **Dosya:** `kaynak_tahsisi_analizi.pdf`
 
 Bu çalışma, Craven bölgesindeki arazi kullanım politikalarının veri odaklı değerlendirmesini içerir. Depo (Warehouse) ve konut alanlarının tahsisinde analitik düşünme süreci ve politika odaklı çözümlemeler yapılmıştır..
