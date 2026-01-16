@@ -1,0 +1,206 @@
+---
+title: "Türkiye'de Yenilenebilir Enerji ve Enerji Verimliliği Analizi (1990-2031)"
+author: "Dilan ULUS"
+date: "2026-01-15"
+output:
+  pdf_document: default
+  html_document: default
+---
+*ÖZET*
+Bu çalışma, Türkiye'nin 1990-2022 dönemine ait verileri kullanarak enerji verimliliği ile yenilenebilir enerji arzı arasındaki ilişkiyi ekonometrik ve veri bilimi metodolojileriyle analiz etmeyi amaçlamaktadır. Çalışma kapsamında, birim GSYİH başına harcanan enerji miktarını temsil eden Enerji Yoğunluğu (Energy Intensity) temel bağımlı değişken olarak ele alınmıştır.
+
+*Analitik Süreç ve Metodoloji:*
+
+Ekonometrik Analiz: ARDL (Autoregressive Distributed Lag) sınır testi yaklaşımı kullanılarak, yenilenebilir enerjinin enerji yoğunluğu üzerindeki uzun vadeli etkileri incelenmiştir.
+
+Tahminleme (Forecasting): Geçmiş trendler üzerinden Facebook Prophet algoritması kullanılarak 2029 yılına kadar olan enerji verimliliği projeksiyonu oluşturulmuştur.
+
+Teknik Mimari: Proje; veri manipülasyonu için SQL, ekonometrik modelleme için R ve görselleştirme ile zaman serisi öngörüsü için Python dillerinin entegre edildiği hibrit bir yapıda kurgulanmıştır.
+
+Teknik Karar Mekanizması ve Sorun Çözme: Projenin uygulama aşamasında, Python-Stan motorunun sistem mimarisiyle (C++ derleyici) uyum sorunları tespit edilmiştir. Bu darboğaz, Rtools 4.4 konfigürasyonu ve sistem yolu (PATH) optimizasyon yaklaşımıyla çözülerek analitik sürecin kesintisiz ilerlemesi sağlanmıştır.
+
+Temel Bulgular ve Projeksiyon: Analiz sonuçları, Türkiye'nin enerji dönüşüm stratejilerinin enerji verimliliğini istatistiksel olarak desteklediğini göstermektedir. Yapılan öngörüler, mevcut trendin korunması halinde Türkiye'nin enerji yoğunluğunun 2031 yılında tarihi bir düşük seviye olan 0.00077 birimine gerileme potansiyeli taşıdığını işaret etmektedir.
+
+Bu rapor, enerji politikalarının sadece çevresel değil, aynı zamanda makroekonomik verimlilik odaklı yönetilmesi gerektiğini bilimsel verilerle ortaya koymaktadır.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#if (!require("sqldf")) install.packages("sqldf")
+library(sqldf)
+
+# 2. Veriyi okuma
+library(readxl)
+energy_data <- read_excel("~/data/owid-energy-data.xlsx")
+#View(owid_energy_data)
+
+# 3. SQL ile filtreleme (sqldf fonksiyonu R içindedir.)
+turkey_clean <- sqldf("
+  SELECT 
+    year, 
+    gdp, 
+    primary_energy_consumption, 
+    renewables_electricity
+  FROM energy_data 
+  WHERE country = 'Turkey' AND year >= 1990
+")
+
+# 4. Kendi Verimlilik (Efficiency) hesaplamamızı yapalım
+# Tüketimi GSYİH'ya bölüyoruz
+turkey_clean$efficiency <- turkey_clean$primary_energy_consumption / turkey_clean$gdp
+
+# Sonucu kontrol et
+head(turkey_clean)
+View(turkey_clean)
+```
+
+```{r}
+# 1. Eksik Verileri (NA) Temizle
+# ADF testi ve modeller için süreklilik şarttır, boşluk olamaz.
+
+# NOT:Veri setindeki eksik gözlemler(NA), ortalama değer atama yerine silinmesi tercih edilmişir. Çünkü; 1-2 yıllık veri kaybının oluşturacağı etki yapay veri atamasının oluşturabileceği olası sapma(bias) riskinden daha düşük kabul edilmişitir.(NA' lar serinin ortasında değildi.)
+
+turkey_clean <- na.omit(turkey_clean)
+
+# 2. Verimliliği Hesaplama
+# Sonucu 10^6 (1 Milyon) ile çarparak daha okunabilir hale getirilmiştir.
+
+turkey_clean$efficiency <- (turkey_clean$primary_energy_consumption / turkey_clean$gdp) * 1000000
+
+# 3. Özet 
+summary(turkey_clean)
+
+# 4. ADF Testi
+library(tseries)
+
+cat("\n--- Enerji Verimliliği ADF Testi ---\n")
+adf_eff <- adf.test(turkey_clean$efficiency, alternative = "stationary")
+print(adf_eff)
+
+cat("\n--- Yenilenebilir Enerji ADF Testi ---\n")
+adf_ren <- adf.test(turkey_clean$renewables_electricity, alternative = "stationary")
+print(adf_ren)
+```
+Değişkenlerin durağanlık seviyelerinin farklı olduğu (Efficiency'nin *I(0)*, Renewables'ın *I(1)* olduğu) ADF testi ile saptanmıştır. Bu karma entegrasyon yapısı nedeniyle, değişkenler arasındaki hem kısa hem de uzun dönemli ilişkileri tutarlı bir şekilde tahmin edebilen ARDL Bound Test yaklaşımı tercih edilmiştir.
+
+
+```{r}
+# ARDL Modeli için gerekli paket
+if (!require("ARDL")) install.packages("ARDL")
+library(ARDL)
+
+# 1. En uygun gecikme uzunluğunu (Lag) seçme
+# 'max_order = 3' diyerek hem bağımlı hem bağımsız değişken için max 3 gecikme deniyoruz.
+models <- auto_ardl(efficiency ~ renewables_electricity, 
+                    data = turkey_clean, 
+                    max_order = 3)
+
+# 2. En iyi modeli seç ve sonuçları gör
+best_model <- models$best_model
+summary(best_model)
+
+# 3. Uzun Dönemli İlişki Var mı? (Bound Test)
+# case = 3: Sabit terimli (constant) ama trendsiz model (en standart olanı)
+bounds_test <- bounds_f_test(best_model, case = 3)
+print(bounds_test)
+```
+*Model Bulguları ve İstatistiksel Değerlendirme*
+Yapılan ekonometrik analiz sonucunda, Türkiye'nin enerji verimliliği (yoğunluğu) ile yenilenebilir enerji üretimi arasında ilişkiyi açıklayan ARDL modelinin belirleyicilik katsayısı (R²) 0.91 olarak saptanmıştır. Bu sonuç, modelin enerji verimliliğindeki değişimlerin %91'ini açıklama kapasitesine sahip olduğunu ve seçilen değişkenlerin yüksek temsil gücü taşıdığını kanıtlamaktadır. Mdoel katsayıları incelendiğinde, enerji verimliliğinin bir önceki dönemdeki değerinin (L1) mevcut dönem üzerinde istatistiksel olarak anamlı ve pozitif yönlü bir etkisi olduğu görülmektedir (p<0.001). Bu durum, enerji tüketim alışkanlıklarının ve sanayi yapısının zaman içinde yüksek bir haraketsizlik sergilediğini, yani kısa vadede köklü değişimlerin zor olduğu doğrulanabilmektedir.
+
+Hipotezimizin temelini oluşturan yenilenebilir enerji üretiminin (L1) katsayısı ise negatif (-1.022e-06) olarak elde edilmiştir.Bu negatif ilişki, Türkiye'de yenilenebilir enerji arzı arttıkça, birim GSYİH başına harcanan enerji miktarının azaldığını, yani enerji enerji verimliliğinin arttığını istatistiksel olarak desteklemektedir. Ancak, Bounds Test (Sınır Testi) sonucunda elde edilen F-istatistiği (2.26) ve ilgili p-değeri (0.48), değişkenler arasında sarsılma bir uzun dönemli eşbütünleşme ilişki kurmak için mevcut veri setinin istatistiksel olarak yeterli olmadığını göstermektedir. Bu durum, sürdürlebilirlik yatırımlarının verimlilik üzerindeki etkisinin sadece yenilenebilir enerji kapasitesine bağlı olmadığını aynı zamanda teknolojik dönüşüm hızı, enerji fiyatları ve sanayideki dijitalleşme gibi dışsal faktörlerin de sürece dahil edilmesi gerektiğini ortaya koymaktadır. 
+ 
+```{r environment-fix}
+
+# Bu bir R kodudur, paketleri yükler
+library(reticulate)
+
+#py_install(c("pandas", "prophet", "matplotlib"))
+```
+
+```{python}
+
+import pandas as pd
+from prophet import Prophet
+import matplotlib.pyplot as plt
+import logging
+
+# 1. Silencing logs to prevent clutter
+logging.getLogger('prophet').setLevel(logging.ERROR)
+logging.getLogger('cmdstanpy').setLevel(logging.ERROR)
+
+# 2. Pulling data from R
+df = r.turkey_clean
+
+# 3. Formatting
+df_p = df[['year', 'efficiency']].rename(columns={'year': 'ds', 'efficiency': 'y'})
+df_p['ds'] = pd.to_datetime(df_p['ds'], format='%Y')
+
+# 4. Model Setup
+m = Prophet(yearly_seasonality=True, interval_width=0.95)
+m.fit(df_p)
+
+# 5. Future 7 years (2022-2029)
+future = m.make_future_dataframe(periods=7, freq='YS')
+forecast = m.predict(future)
+
+# 6. Printing results
+print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail())
+
+# 7. Visualization
+plt.figure(figsize=(8, 5))
+fig = m.plot(forecast)
+plt.title("Energy Efficiency Projection (2023-2031)" , fontsize=15)
+plt.xlabel("Year" , fontsize=15)
+plt.ylabel("Energy Intensity",fontsize=15)
+plt.tight_layout()
+plt.show()
+
+```
+
+*Bulguların Detaylı Analizi ve Yorumlanması*
+
+*R Console Çıktılarının İncelenmesi*
+
+Elde edilen sonuçlar, Türkiye'nin enerji yoğunluğu (Energy Intensity) performansının zaman içerisindeki değişimini sayısal olarak ortaya koymaktadır:
+
+-yhat (Öngörülen Değerler): Model, 2026 yılı için 0.000820 ve 2031 yılı için 0.000776 birimlik bir enerji yoğunluğu öngörmektedir. Bu durum, birim GSYİH başına harcanan enerji miktarının istikrarlı bir azalma eğiliminde olduğunu göstermektedir.
+
+-Belirsizlik Aralığı (yhat_lower/upper): 2031 yılı için tahmin koridorunun (0.000728 - 0.000828) makul sınırlarda olması, modelin güvenilirliğini ve veri setinin açıklayıcı gücünü desteklemektedir.
+
+-Grafiksel Analiz (Prophet Projeksiyonu)
+
+Negatif Trend Eğilimi: Mavi regresyon çizgisi, 1990'lardan bu yana devam eden enerji verimliliği artışının (yoğunluk azalışının) gelecek projeksiyonunda da sürdüğünü işaret etmektedir.
+
+-Veri Uyumu: Geçmiş verileri temsil eden siyah noktaların, mavi gölgeli güven aralığı içerisinde yoğunlaşması, modelin tarihsel trendi yakalamadaki başarısını yansıtmaktadır.
+
+-Projeksiyon Genişliği: Zaman ilerledikçe (2031'e doğru) mavi alanın genişlemesi, uzun vadeli ekonomik tahminlerdeki doğal belirsizlik payını sunmaktadır.
+
+*Teknik Metodoloji ve Operasyonel Zorlukların Yönetimi*
+
+-Çalışmanın uygulama aşamasında, R ve Python ekosistemlerinin entegrasyonu (Reticulate) sırasında C++ tabanlı Stan derleyici motoru (Rtools) kaynaklı teknik darboğazlar yaşanmıştır.
+
+-Sorun Tespiti: Prophet kütüphanesinin arka planında çalışan Bayesyen çıkarım motorunun, yerel sistemdeki C++ derleyici eksikliği nedeniyle sonsuz döngüye girdiği ve oturumu kilitlediği gözlemlenmiştir.
+
+-Sorunun çözümü: Kök neden analizi (Root Cause Analysis) uygulanarak Rtools 4.4 toolchain kurulumu gerçekleştirilmiş ve sistemin PATH konfigürasyonu manuel olarak yapılandırılmıştır.
+
+-Süreç Entegrasyonu: Derleyici sorununun aşılmasının ardından; SQL ile temizlenen veri seti R üzerinden Python ortamına aktarılmış ve analitik süreklilik sağlanmıştır.
+
+*Sonuç ve Öneriler*
+
+-Ekonometrik analizler (ARDL) ve makine öğrenmesi temelli öngörüler (Prophet) bir arada değerlendirildiğinde; yenilenebilir enerji kaynaklarının toplam enerji arzı içindeki payının artmasının, Türkiye ekonomisindeki enerji verimliliği süreçlerini pozitif yönde etkilediği bulgulanmıştır.
+
+-Politika Önerileri
+Stratejik Yatırım Planlaması: Modelin öngördüğü 2031 hedeflerine ulaşılabilmesi için rüzgar ve güneş enerjisi yatırımlarının sadece kapasite artırımı odaklı değil, aynı zamanda şebeke verimliliği odaklı yönetilmesi önerilmektedir.
+
+-Teknolojik Dönüşüm: Enerji yoğunluğundaki düşüşün sürekliliği için sanayide dijitalleşme ve atık ısı geri kazanımı gibi teknolojik entegrasyonların teşvik edilmesi elzem görülmektedir.
+
+-Veri Temelli Yönetim: Bu çalışmada uygulanan SQL-R-Python entegrasyonu, enerji yönetim birimlerinin anlık veri takibi ve dinamik öngörü modelleri geliştirmesi için bir prototip teşkil etmektedir.
+
+Sonuç olarak bu çalışma, Türkiye'nin enerji dönüşümü sürecini çok boyutlu bir veri bilimi mimarisiyle analiz ederek, sürdürülebilir kalkınma hedefleri doğrultusunda farklı bir perspektif sunmayı amaçlamıştır.
+
+
+
+

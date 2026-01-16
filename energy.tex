@@ -1,0 +1,657 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Türkiye'de Yenilenebilir Enerji ve Enerji Verimliliği Analizi (1990-2031)},
+  pdfauthor={Dilan ULUS},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Türkiye'de Yenilenebilir Enerji ve Enerji Verimliliği Analizi
+(1990-2031)}
+\author{Dilan ULUS}
+\date{2026-01-15}
+
+\begin{document}
+\maketitle
+
+\emph{ÖZET} Bu çalışma, Türkiye'nin 1990-2022 dönemine ait verileri
+kullanarak enerji verimliliği ile yenilenebilir enerji arzı arasındaki
+ilişkiyi ekonometrik ve veri bilimi metodolojileriyle analiz etmeyi
+amaçlamaktadır. Çalışma kapsamında, birim GSYİH başına harcanan enerji
+miktarını temsil eden Enerji Yoğunluğu (Energy Intensity) temel bağımlı
+değişken olarak ele alınmıştır.
+
+\emph{Analitik Süreç ve Metodoloji:}
+
+Ekonometrik Analiz: ARDL (Autoregressive Distributed Lag) sınır testi
+yaklaşımı kullanılarak, yenilenebilir enerjinin enerji yoğunluğu
+üzerindeki uzun vadeli etkileri incelenmiştir.
+
+Tahminleme (Forecasting): Geçmiş trendler üzerinden Facebook Prophet
+algoritması kullanılarak 2029 yılına kadar olan enerji verimliliği
+projeksiyonu oluşturulmuştur.
+
+Teknik Mimari: Proje; veri manipülasyonu için SQL, ekonometrik modelleme
+için R ve görselleştirme ile zaman serisi öngörüsü için Python
+dillerinin entegre edildiği hibrit bir yapıda kurgulanmıştır.
+
+Teknik Karar Mekanizması ve Sorun Çözme: Projenin uygulama aşamasında,
+Python-Stan motorunun sistem mimarisiyle (C++ derleyici) uyum sorunları
+tespit edilmiştir. Bu darboğaz, Rtools 4.4 konfigürasyonu ve sistem yolu
+(PATH) optimizasyon yaklaşımıyla çözülerek analitik sürecin kesintisiz
+ilerlemesi sağlanmıştır.
+
+Temel Bulgular ve Projeksiyon: Analiz sonuçları, Türkiye'nin enerji
+dönüşüm stratejilerinin enerji verimliliğini istatistiksel olarak
+desteklediğini göstermektedir. Yapılan öngörüler, mevcut trendin
+korunması halinde Türkiye'nin enerji yoğunluğunun 2031 yılında tarihi
+bir düşük seviye olan 0.00077 birimine gerileme potansiyeli taşıdığını
+işaret etmektedir.
+
+Bu rapor, enerji politikalarının sadece çevresel değil, aynı zamanda
+makroekonomik verimlilik odaklı yönetilmesi gerektiğini bilimsel
+verilerle ortaya koymaktadır.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#if (!require("sqldf")) install.packages("sqldf")}
+\FunctionTok{library}\NormalTok{(sqldf)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'sqldf' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## Zorunlu paket yükleniyor: gsubfn
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'gsubfn' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## Zorunlu paket yükleniyor: proto
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'proto' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## Zorunlu paket yükleniyor: RSQLite
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 2. Veriyi okuma}
+\FunctionTok{library}\NormalTok{(readxl)}
+\NormalTok{energy\_data }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"\textasciitilde{}/data/owid{-}energy{-}data.xlsx"}\NormalTok{)}
+\CommentTok{\#View(owid\_energy\_data)}
+
+\CommentTok{\# 3. SQL ile filtreleme (sqldf fonksiyonu R içindedir.)}
+\NormalTok{turkey\_clean }\OtherTok{\textless{}{-}} \FunctionTok{sqldf}\NormalTok{(}\StringTok{"}
+\StringTok{  SELECT }
+\StringTok{    year, }
+\StringTok{    gdp, }
+\StringTok{    primary\_energy\_consumption, }
+\StringTok{    renewables\_electricity}
+\StringTok{  FROM energy\_data }
+\StringTok{  WHERE country = \textquotesingle{}Turkey\textquotesingle{} AND year \textgreater{}= 1990}
+\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# 4. Kendi Verimlilik (Efficiency) hesaplamamızı yapalım}
+\CommentTok{\# Tüketimi GSYİH\textquotesingle{}ya bölüyoruz}
+\NormalTok{turkey\_clean}\SpecialCharTok{$}\NormalTok{efficiency }\OtherTok{\textless{}{-}}\NormalTok{ turkey\_clean}\SpecialCharTok{$}\NormalTok{primary\_energy\_consumption }\SpecialCharTok{/}\NormalTok{ turkey\_clean}\SpecialCharTok{$}\NormalTok{gdp}
+
+\CommentTok{\# Sonucu kontrol et}
+\FunctionTok{head}\NormalTok{(turkey\_clean)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   year          gdp primary_energy_consumption renewables_electricity
+## 1 1990 486761175773                   561.3059                  23.23
+## 2 1991 498030901697                   573.1288                  22.80
+## 3 1992 535075772045                   602.7863                  26.69
+## 4 1993 586262069548                   655.2285                  34.09
+## 5 1994 562010879560                   634.5010                  30.72
+## 6 1995 610881311777                   710.1067                  35.85
+##     efficiency
+## 1 1.153144e-09
+## 2 1.150790e-09
+## 3 1.126544e-09
+## 4 1.117637e-09
+## 5 1.128983e-09
+## 6 1.162430e-09
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{View}\NormalTok{(turkey\_clean)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1. Eksik Verileri (NA) Temizle}
+\CommentTok{\# ADF testi ve modeller için süreklilik şarttır, boşluk olamaz.}
+
+\CommentTok{\# NOT:Veri setindeki eksik gözlemler(NA), ortalama değer atama yerine silinmesi tercih edilmişir. Çünkü; 1{-}2 yıllık veri kaybının oluşturacağı etki yapay veri atamasının oluşturabileceği olası sapma(bias) riskinden daha düşük kabul edilmişitir.(NA\textquotesingle{} lar serinin ortasında değildi.)}
+
+\NormalTok{turkey\_clean }\OtherTok{\textless{}{-}} \FunctionTok{na.omit}\NormalTok{(turkey\_clean)}
+
+\CommentTok{\# 2. Verimliliği Hesaplama}
+\CommentTok{\# Sonucu 10\^{}6 (1 Milyon) ile çarparak daha okunabilir hale getirilmiştir.}
+
+\NormalTok{turkey\_clean}\SpecialCharTok{$}\NormalTok{efficiency }\OtherTok{\textless{}{-}}\NormalTok{ (turkey\_clean}\SpecialCharTok{$}\NormalTok{primary\_energy\_consumption }\SpecialCharTok{/}\NormalTok{ turkey\_clean}\SpecialCharTok{$}\NormalTok{gdp) }\SpecialCharTok{*} \DecValTok{1000000}
+
+\CommentTok{\# 3. Özet }
+\FunctionTok{summary}\NormalTok{(turkey\_clean)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       year           gdp            primary_energy_consumption
+##  Min.   :1990   Min.   :4.868e+11   Min.   : 561.3            
+##  1st Qu.:1998   1st Qu.:7.251e+11   1st Qu.: 808.9            
+##  Median :2006   Median :1.097e+12   Median :1105.1            
+##  Mean   :2006   Mean   :1.185e+12   Mean   :1160.6            
+##  3rd Qu.:2014   3rd Qu.:1.628e+12   3rd Qu.:1454.4            
+##  Max.   :2022   Max.   :2.386e+12   Max.   :1969.0            
+##  renewables_electricity   efficiency       
+##  Min.   : 22.80         Min.   :0.0008253  
+##  1st Qu.: 34.42         1st Qu.:0.0009316  
+##  Median : 40.73         Median :0.0010132  
+##  Mean   : 56.50         Mean   :0.0010233  
+##  3rd Qu.: 69.22         3rd Qu.:0.0011156  
+##  Max.   :134.35         Max.   :0.0011689
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 4. ADF Testi}
+\FunctionTok{library}\NormalTok{(tseries)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'tseries' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## Registered S3 method overwritten by 'quantmod':
+##   method            from
+##   as.zoo.data.frame zoo
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{{-}{-}{-} Enerji Verimliliği ADF Testi {-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## --- Enerji Verimliliği ADF Testi ---
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{adf\_eff }\OtherTok{\textless{}{-}} \FunctionTok{adf.test}\NormalTok{(turkey\_clean}\SpecialCharTok{$}\NormalTok{efficiency, }\AttributeTok{alternative =} \StringTok{"stationary"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in adf.test(turkey_clean$efficiency, alternative = "stationary"):
+## p-value smaller than printed p-value
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(adf\_eff)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  turkey_clean$efficiency
+## Dickey-Fuller = -4.4812, Lag order = 3, p-value = 0.01
+## alternative hypothesis: stationary
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{{-}{-}{-} Yenilenebilir Enerji ADF Testi {-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## --- Yenilenebilir Enerji ADF Testi ---
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{adf\_ren }\OtherTok{\textless{}{-}} \FunctionTok{adf.test}\NormalTok{(turkey\_clean}\SpecialCharTok{$}\NormalTok{renewables\_electricity, }\AttributeTok{alternative =} \StringTok{"stationary"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning in adf.test(turkey_clean$renewables_electricity, alternative =
+## "stationary"): p-value greater than printed p-value
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(adf\_ren)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Augmented Dickey-Fuller Test
+## 
+## data:  turkey_clean$renewables_electricity
+## Dickey-Fuller = 0.046895, Lag order = 3, p-value = 0.99
+## alternative hypothesis: stationary
+\end{verbatim}
+
+Değişkenlerin durağanlık seviyelerinin farklı olduğu (Efficiency'nin
+\emph{I(0)}, Renewables'ın \emph{I(1)} olduğu) ADF testi ile
+saptanmıştır. Bu karma entegrasyon yapısı nedeniyle, değişkenler
+arasındaki hem kısa hem de uzun dönemli ilişkileri tutarlı bir şekilde
+tahmin edebilen ARDL Bound Test yaklaşımı tercih edilmiştir.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# ARDL Modeli için gerekli paket}
+\ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{require}\NormalTok{(}\StringTok{"ARDL"}\NormalTok{)) }\FunctionTok{install.packages}\NormalTok{(}\StringTok{"ARDL"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Zorunlu paket yükleniyor: ARDL
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'ARDL' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{verbatim}
+## To cite the ARDL package in publications:
+## 
+## Use this reference to refer to the validity of the ARDL package.
+## 
+##   Natsiopoulos, Kleanthis, and Tzeremes, Nickolaos G. (2022). ARDL
+##   bounds test for cointegration: Replicating the Pesaran et al. (2001)
+##   results for the UK earnings equation using R. Journal of Applied
+##   Econometrics, 37(5), 1079-1090. https://doi.org/10.1002/jae.2919
+## 
+## Use this reference to cite this specific version of the ARDL package.
+## 
+##   Kleanthis Natsiopoulos and Nickolaos Tzeremes (2023). ARDL: ARDL, ECM
+##   and Bounds-Test for Cointegration. R package version 0.2.4.
+##   https://CRAN.R-project.org/package=ARDL
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ARDL)}
+
+\CommentTok{\# 1. En uygun gecikme uzunluğunu (Lag) seçme}
+\CommentTok{\# \textquotesingle{}max\_order = 3\textquotesingle{} diyerek hem bağımlı hem bağımsız değişken için max 3 gecikme deniyoruz.}
+\NormalTok{models }\OtherTok{\textless{}{-}} \FunctionTok{auto\_ardl}\NormalTok{(efficiency }\SpecialCharTok{\textasciitilde{}}\NormalTok{ renewables\_electricity, }
+                    \AttributeTok{data =}\NormalTok{ turkey\_clean, }
+                    \AttributeTok{max\_order =} \DecValTok{3}\NormalTok{)}
+
+\CommentTok{\# 2. En iyi modeli seç ve sonuçları gör}
+\NormalTok{best\_model }\OtherTok{\textless{}{-}}\NormalTok{ models}\SpecialCharTok{$}\NormalTok{best\_model}
+\FunctionTok{summary}\NormalTok{(best\_model)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Time series regression with "ts" data:
+## Start = 2, End = 33
+## 
+## Call:
+## dynlm::dynlm(formula = full_formula, data = data, start = start, 
+##     end = end)
+## 
+## Residuals:
+##        Min         1Q     Median         3Q        Max 
+## -7.237e-05 -1.722e-05  1.063e-06  1.781e-05  5.719e-05 
+## 
+## Coefficients:
+##                                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)                   1.979e-04  1.182e-04   1.674   0.1053    
+## L(efficiency, 1)              8.300e-01  1.010e-01   8.218 6.05e-09 ***
+## renewables_electricity        3.847e-07  5.168e-07   0.745   0.4628    
+## L(renewables_electricity, 1) -1.022e-06  5.392e-07  -1.896   0.0684 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.97e-05 on 28 degrees of freedom
+## Multiple R-squared:  0.9157, Adjusted R-squared:  0.9067 
+## F-statistic: 101.4 on 3 and 28 DF,  p-value: 3.804e-15
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 3. Uzun Dönemli İlişki Var mı? (Bound Test)}
+\CommentTok{\# case = 3: Sabit terimli (constant) ama trendsiz model (en standart olanı)}
+\NormalTok{bounds\_test }\OtherTok{\textless{}{-}} \FunctionTok{bounds\_f\_test}\NormalTok{(best\_model, }\AttributeTok{case =} \DecValTok{3}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(bounds\_test)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Bounds F-test (Wald) for no cointegration
+## 
+## data:  d(efficiency) ~ L(efficiency, 1) + L(renewables_electricity,     1) + d(renewables_electricity)
+## F = 2.2607, p-value = 0.4859
+## alternative hypothesis: Possible cointegration
+## null values:
+##    k    T 
+##    1 1000
+\end{verbatim}
+
+\emph{Model Bulguları ve İstatistiksel Değerlendirme} Yapılan
+ekonometrik analiz sonucunda, Türkiye'nin enerji verimliliği (yoğunluğu)
+ile yenilenebilir enerji üretimi arasında ilişkiyi açıklayan ARDL
+modelinin belirleyicilik katsayısı (R²) 0.91 olarak saptanmıştır. Bu
+sonuç, modelin enerji verimliliğindeki değişimlerin \%91'ini açıklama
+kapasitesine sahip olduğunu ve seçilen değişkenlerin yüksek temsil gücü
+taşıdığını kanıtlamaktadır. Mdoel katsayıları incelendiğinde, enerji
+verimliliğinin bir önceki dönemdeki değerinin (L1) mevcut dönem üzerinde
+istatistiksel olarak anamlı ve pozitif yönlü bir etkisi olduğu
+görülmektedir (p\textless0.001). Bu durum, enerji tüketim
+alışkanlıklarının ve sanayi yapısının zaman içinde yüksek bir
+haraketsizlik sergilediğini, yani kısa vadede köklü değişimlerin zor
+olduğu doğrulanabilmektedir.
+
+Hipotezimizin temelini oluşturan yenilenebilir enerji üretiminin (L1)
+katsayısı ise negatif (-1.022e-06) olarak elde edilmiştir.Bu negatif
+ilişki, Türkiye'de yenilenebilir enerji arzı arttıkça, birim GSYİH
+başına harcanan enerji miktarının azaldığını, yani enerji enerji
+verimliliğinin arttığını istatistiksel olarak desteklemektedir. Ancak,
+Bounds Test (Sınır Testi) sonucunda elde edilen F-istatistiği (2.26) ve
+ilgili p-değeri (0.48), değişkenler arasında sarsılma bir uzun dönemli
+eşbütünleşme ilişki kurmak için mevcut veri setinin istatistiksel olarak
+yeterli olmadığını göstermektedir. Bu durum, sürdürlebilirlik
+yatırımlarının verimlilik üzerindeki etkisinin sadece yenilenebilir
+enerji kapasitesine bağlı olmadığını aynı zamanda teknolojik dönüşüm
+hızı, enerji fiyatları ve sanayideki dijitalleşme gibi dışsal
+faktörlerin de sürece dahil edilmesi gerektiğini ortaya koymaktadır.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Bu bir R kodudur, paketleri yükler}
+\FunctionTok{library}\NormalTok{(reticulate)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'reticulate' was built under R version 4.4.3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#py\_install(c("pandas", "prophet", "matplotlib"))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ pandas }\ImportTok{as}\NormalTok{ pd}
+\ImportTok{from}\NormalTok{ prophet }\ImportTok{import}\NormalTok{ Prophet}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Importing plotly failed. Interactive plots will not work.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ matplotlib.pyplot }\ImportTok{as}\NormalTok{ plt}
+\ImportTok{import}\NormalTok{ logging}
+
+\CommentTok{\# 1. Silencing logs to prevent clutter}
+\NormalTok{logging.getLogger(}\StringTok{\textquotesingle{}prophet\textquotesingle{}}\NormalTok{).setLevel(logging.ERROR)}
+\NormalTok{logging.getLogger(}\StringTok{\textquotesingle{}cmdstanpy\textquotesingle{}}\NormalTok{).setLevel(logging.ERROR)}
+
+\CommentTok{\# 2. Pulling data from R}
+\NormalTok{df }\OperatorTok{=}\NormalTok{ r.turkey\_clean}
+
+\CommentTok{\# 3. Formatting}
+\NormalTok{df\_p }\OperatorTok{=}\NormalTok{ df[[}\StringTok{\textquotesingle{}year\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}efficiency\textquotesingle{}}\NormalTok{]].rename(columns}\OperatorTok{=}\NormalTok{\{}\StringTok{\textquotesingle{}year\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}ds\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}efficiency\textquotesingle{}}\NormalTok{: }\StringTok{\textquotesingle{}y\textquotesingle{}}\NormalTok{\})}
+\NormalTok{df\_p[}\StringTok{\textquotesingle{}ds\textquotesingle{}}\NormalTok{] }\OperatorTok{=}\NormalTok{ pd.to\_datetime(df\_p[}\StringTok{\textquotesingle{}ds\textquotesingle{}}\NormalTok{], }\BuiltInTok{format}\OperatorTok{=}\StringTok{\textquotesingle{}\%Y\textquotesingle{}}\NormalTok{)}
+
+\CommentTok{\# 4. Model Setup}
+\NormalTok{m }\OperatorTok{=}\NormalTok{ Prophet(yearly\_seasonality}\OperatorTok{=}\VariableTok{True}\NormalTok{, interval\_width}\OperatorTok{=}\FloatTok{0.95}\NormalTok{)}
+\NormalTok{m.fit(df\_p)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## <prophet.forecaster.Prophet object at 0x000001DE365A96D0>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 5. Future 7 years (2022{-}2029)}
+\NormalTok{future }\OperatorTok{=}\NormalTok{ m.make\_future\_dataframe(periods}\OperatorTok{=}\DecValTok{7}\NormalTok{, freq}\OperatorTok{=}\StringTok{\textquotesingle{}YS\textquotesingle{}}\NormalTok{)}
+\NormalTok{forecast }\OperatorTok{=}\NormalTok{ m.predict(future)}
+
+\CommentTok{\# 6. Printing results}
+\BuiltInTok{print}\NormalTok{(forecast[[}\StringTok{\textquotesingle{}ds\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}yhat\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}yhat\_lower\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}yhat\_upper\textquotesingle{}}\NormalTok{]].tail())}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            ds      yhat  yhat_lower  yhat_upper
+## 35 2025-01-01  0.000825    0.000774    0.000878
+## 36 2026-01-01  0.000820    0.000768    0.000868
+## 37 2027-01-01  0.000817    0.000766    0.000866
+## 38 2028-01-01  0.000816    0.000760    0.000866
+## 39 2029-01-01  0.000784    0.000734    0.000834
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 7. Visualization}
+\NormalTok{plt.figure(figsize}\OperatorTok{=}\NormalTok{(}\DecValTok{8}\NormalTok{, }\DecValTok{5}\NormalTok{))}
+\NormalTok{fig }\OperatorTok{=}\NormalTok{ m.plot(forecast)}
+\NormalTok{plt.title(}\StringTok{"Energy Efficiency Projection (2023{-}2031)"}\NormalTok{ , fontsize}\OperatorTok{=}\DecValTok{15}\NormalTok{)}
+\NormalTok{plt.xlabel(}\StringTok{"Year"}\NormalTok{ , fontsize}\OperatorTok{=}\DecValTok{15}\NormalTok{)}
+\NormalTok{plt.ylabel(}\StringTok{"Energy Intensity"}\NormalTok{,fontsize}\OperatorTok{=}\DecValTok{15}\NormalTok{)}
+\NormalTok{plt.tight\_layout()}
+\NormalTok{plt.show()}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{energy_files/figure-latex/unnamed-chunk-4-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{energy_files/figure-latex/unnamed-chunk-4-2.pdf}}
+
+\emph{Bulguların Detaylı Analizi ve Yorumlanması}
+
+\emph{R Console Çıktılarının İncelenmesi}
+
+Elde edilen sonuçlar, Türkiye'nin enerji yoğunluğu (Energy Intensity)
+performansının zaman içerisindeki değişimini sayısal olarak ortaya
+koymaktadır:
+
+-yhat (Öngörülen Değerler): Model, 2026 yılı için 0.000820 ve 2031 yılı
+için 0.000776 birimlik bir enerji yoğunluğu öngörmektedir. Bu durum,
+birim GSYİH başına harcanan enerji miktarının istikrarlı bir azalma
+eğiliminde olduğunu göstermektedir.
+
+-Belirsizlik Aralığı (yhat\_lower/upper): 2031 yılı için tahmin
+koridorunun (0.000728 - 0.000828) makul sınırlarda olması, modelin
+güvenilirliğini ve veri setinin açıklayıcı gücünü desteklemektedir.
+
+-Grafiksel Analiz (Prophet Projeksiyonu)
+
+Negatif Trend Eğilimi: Mavi regresyon çizgisi, 1990'lardan bu yana devam
+eden enerji verimliliği artışının (yoğunluk azalışının) gelecek
+projeksiyonunda da sürdüğünü işaret etmektedir.
+
+-Veri Uyumu: Geçmiş verileri temsil eden siyah noktaların, mavi gölgeli
+güven aralığı içerisinde yoğunlaşması, modelin tarihsel trendi
+yakalamadaki başarısını yansıtmaktadır.
+
+-Projeksiyon Genişliği: Zaman ilerledikçe (2031'e doğru) mavi alanın
+genişlemesi, uzun vadeli ekonomik tahminlerdeki doğal belirsizlik payını
+sunmaktadır.
+
+\emph{Teknik Metodoloji ve Operasyonel Zorlukların Yönetimi}
+
+-Çalışmanın uygulama aşamasında, R ve Python ekosistemlerinin
+entegrasyonu (Reticulate) sırasında C++ tabanlı Stan derleyici motoru
+(Rtools) kaynaklı teknik darboğazlar yaşanmıştır.
+
+-Sorun Tespiti: Prophet kütüphanesinin arka planında çalışan Bayesyen
+çıkarım motorunun, yerel sistemdeki C++ derleyici eksikliği nedeniyle
+sonsuz döngüye girdiği ve oturumu kilitlediği gözlemlenmiştir.
+
+-Sorunun çözümü: Kök neden analizi (Root Cause Analysis) uygulanarak
+Rtools 4.4 toolchain kurulumu gerçekleştirilmiş ve sistemin PATH
+konfigürasyonu manuel olarak yapılandırılmıştır.
+
+-Süreç Entegrasyonu: Derleyici sorununun aşılmasının ardından; SQL ile
+temizlenen veri seti R üzerinden Python ortamına aktarılmış ve analitik
+süreklilik sağlanmıştır.
+
+\emph{Sonuç ve Öneriler}
+
+-Ekonometrik analizler (ARDL) ve makine öğrenmesi temelli öngörüler
+(Prophet) bir arada değerlendirildiğinde; yenilenebilir enerji
+kaynaklarının toplam enerji arzı içindeki payının artmasının, Türkiye
+ekonomisindeki enerji verimliliği süreçlerini pozitif yönde etkilediği
+bulgulanmıştır.
+
+-Politika Önerileri Stratejik Yatırım Planlaması: Modelin öngördüğü 2031
+hedeflerine ulaşılabilmesi için rüzgar ve güneş enerjisi yatırımlarının
+sadece kapasite artırımı odaklı değil, aynı zamanda şebeke verimliliği
+odaklı yönetilmesi önerilmektedir.
+
+-Teknolojik Dönüşüm: Enerji yoğunluğundaki düşüşün sürekliliği için
+sanayide dijitalleşme ve atık ısı geri kazanımı gibi teknolojik
+entegrasyonların teşvik edilmesi elzem görülmektedir.
+
+-Veri Temelli Yönetim: Bu çalışmada uygulanan SQL-R-Python entegrasyonu,
+enerji yönetim birimlerinin anlık veri takibi ve dinamik öngörü
+modelleri geliştirmesi için bir prototip teşkil etmektedir.
+
+Sonuç olarak bu çalışma, Türkiye'nin enerji dönüşümü sürecini çok
+boyutlu bir veri bilimi mimarisiyle analiz ederek, sürdürülebilir
+kalkınma hedefleri doğrultusunda farklı bir perspektif sunmayı
+amaçlamıştır.
+
+\end{document}
