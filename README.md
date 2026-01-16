@@ -25,6 +25,7 @@ energy.html: Projenin web tarayıcıda görüntülenebilen profesyonel rapor ç�
 energy.tex: Akademik raporun LaTeX formatındaki kaynak dosyası.
 
 Bu depo (repository), veri analitiği yeteneklerimi sergilediğim projeleri içerir. Odak noktası; farklı programlama dillerini (**R, Python, SQL**) entegre ederek gerçek hayat problemlerine optimize çözümler üretmektir.
+<img width="922" height="567" alt="image" src="https://github.com/user-attachments/assets/c267f95c-d2b1-4a26-b604-791d6e932e5c" />
 
 ---
 
